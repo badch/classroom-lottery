@@ -1,0 +1,1431 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>班級工作與區域分配抽籤系統</title>
+  <style>
+    :root {
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --primary-light: #eff6ff;
+      --success: #16a34a;
+      --success-light: #f0fdf4;
+      --warning: #d97706;
+      --warning-light: #fffbeb;
+      --danger: #dc2626;
+      --danger-light: #fef2f2;
+      --gray-50: #f8fafc;
+      --gray-100: #f1f5f9;
+      --gray-200: #e2e8f0;
+      --gray-300: #cbd5e1;
+      --gray-400: #94a3b8;
+      --gray-500: #64748b;
+      --gray-600: #475569;
+      --gray-700: #334155;
+      --gray-800: #1e293b;
+      --gray-900: #0f172a;
+      --radius: 10px;
+      --shadow: 0 4px 6px -1px rgba(0,0,0,0.07), 0 2px 4px -2px rgba(0,0,0,0.05);
+      --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -4px rgba(0,0,0,0.07);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", "Microsoft JhengHei", sans-serif;
+    }
+
+    body {
+      background-color: #f4f6fa;
+      color: var(--gray-800);
+      line-height: 1.5;
+      padding: 24px 16px;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    header {
+      background: white;
+      padding: 20px 28px;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      margin-bottom: 24px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .title-area h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: var(--gray-900);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .title-area p {
+      color: var(--gray-500);
+      font-size: 0.9rem;
+      margin-top: 4px;
+    }
+
+    .template-selector {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .template-btn {
+      background: var(--primary-light);
+      color: var(--primary);
+      border: 1px solid #bfdbfe;
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-size: 0.88rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .template-btn:hover {
+      background: var(--primary);
+      color: white;
+    }
+
+    .template-btn.active {
+      background: var(--primary);
+      color: white;
+      box-shadow: 0 2px 4px rgba(37, 99, 235, 0.3);
+    }
+
+    .grid-layout {
+      display: grid;
+      grid-template-columns: 1.25fr 1fr;
+      gap: 24px;
+      align-items: start;
+    }
+
+    @media (max-width: 960px) {
+      .grid-layout {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .card {
+      background: white;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 22px;
+      margin-bottom: 24px;
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--gray-200);
+    }
+
+    .card-header h2 {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--gray-800);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 3px 10px;
+      font-size: 0.8rem;
+      border-radius: 9999px;
+      font-weight: 600;
+    }
+
+    .badge-primary {
+      background: var(--primary-light);
+      color: var(--primary);
+    }
+
+    .badge-success {
+      background: var(--success-light);
+      color: var(--success);
+    }
+
+    .badge-warning {
+      background: var(--warning-light);
+      color: var(--warning);
+    }
+
+    .badge-danger {
+      background: var(--danger-light);
+      color: var(--danger);
+    }
+
+    /* Items table */
+    .items-table-wrapper {
+      overflow-x: auto;
+      max-height: 480px;
+      overflow-y: auto;
+      border: 1px solid var(--gray-200);
+      border-radius: 8px;
+    }
+
+    table.items-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 0.92rem;
+    }
+
+    table.items-table th {
+      background: var(--gray-50);
+      color: var(--gray-600);
+      padding: 10px 12px;
+      font-weight: 600;
+      border-bottom: 1px solid var(--gray-200);
+      position: sticky;
+      top: 0;
+      z-index: 2;
+    }
+
+    table.items-table td {
+      padding: 8px 12px;
+      border-bottom: 1px solid var(--gray-200);
+      vertical-align: middle;
+    }
+
+    table.items-table tr:hover {
+      background: #fbfcfe;
+    }
+
+    .input-text {
+      width: 100%;
+      padding: 6px 10px;
+      border: 1px solid var(--gray-300);
+      border-radius: 6px;
+      font-size: 0.9rem;
+      transition: border-color 0.2s;
+    }
+
+    .input-text:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(37,99,235,0.12);
+    }
+
+    .quota-control {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .quota-btn {
+      width: 28px;
+      height: 28px;
+      border-radius: 5px;
+      border: 1px solid var(--gray-300);
+      background: var(--gray-100);
+      cursor: pointer;
+      font-weight: bold;
+      color: var(--gray-700);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s;
+    }
+
+    .quota-btn:hover {
+      background: var(--gray-200);
+      color: var(--gray-900);
+    }
+
+    .quota-input {
+      width: 48px;
+      text-align: center;
+      padding: 4px 6px;
+      border: 1px solid var(--gray-300);
+      border-radius: 6px;
+      font-weight: 600;
+    }
+
+    .btn-icon-danger {
+      background: none;
+      border: none;
+      color: var(--gray-400);
+      cursor: pointer;
+      padding: 6px;
+      border-radius: 6px;
+      transition: all 0.2s;
+    }
+
+    .btn-icon-danger:hover {
+      color: var(--danger);
+      background: var(--danger-light);
+    }
+
+    /* Add Item Form */
+    .add-item-bar {
+      display: grid;
+      grid-template-columns: 1fr 1.5fr 110px auto;
+      gap: 8px;
+      margin-top: 14px;
+      padding: 12px;
+      background: var(--gray-50);
+      border-radius: 8px;
+      border: 1px dashed var(--gray-300);
+      align-items: center;
+    }
+
+    @media (max-width: 600px) {
+      .add-item-bar {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 0.92rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: none;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-hover);
+    }
+
+    .btn-outline {
+      background: white;
+      border: 1px solid var(--gray-300);
+      color: var(--gray-700);
+    }
+
+    .btn-outline:hover {
+      background: var(--gray-100);
+      border-color: var(--gray-400);
+    }
+
+    .btn-success {
+      background: var(--success);
+      color: white;
+    }
+
+    .btn-success:hover {
+      background: #15803d;
+    }
+
+    /* Names input section */
+    .names-textarea {
+      width: 100%;
+      height: 200px;
+      padding: 12px;
+      border: 1px solid var(--gray-300);
+      border-radius: 8px;
+      font-size: 0.95rem;
+      line-height: 1.6;
+      resize: vertical;
+      font-family: inherit;
+    }
+
+    .names-textarea:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(37,99,235,0.12);
+    }
+
+    .names-quick-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 10px;
+      margin-bottom: 14px;
+    }
+
+    .chip-btn {
+      font-size: 0.8rem;
+      padding: 4px 10px;
+      border-radius: 6px;
+      border: 1px solid var(--gray-300);
+      background: white;
+      color: var(--gray-700);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .chip-btn:hover {
+      background: var(--gray-100);
+      border-color: var(--gray-400);
+    }
+
+    /* Stats box */
+    .stats-card {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-bottom: 16px;
+      background: var(--gray-50);
+      padding: 12px;
+      border-radius: 8px;
+      text-align: center;
+    }
+
+    .stat-label {
+      font-size: 0.78rem;
+      color: var(--gray-500);
+      text-transform: uppercase;
+      font-weight: 600;
+    }
+
+    .stat-value {
+      font-size: 1.35rem;
+      font-weight: 700;
+      color: var(--gray-900);
+      margin-top: 2px;
+    }
+
+    .status-msg {
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* Lottery action area */
+    .lottery-hero {
+      text-align: center;
+      padding: 24px 16px;
+      background: linear-gradient(135deg, #1e3a8a, #2563eb);
+      color: white;
+      border-radius: var(--radius);
+      margin-bottom: 24px;
+      box-shadow: var(--shadow-lg);
+    }
+
+    .lottery-hero h3 {
+      font-size: 1.3rem;
+      margin-bottom: 6px;
+    }
+
+    .lottery-hero p {
+      font-size: 0.92rem;
+      opacity: 0.9;
+      margin-bottom: 16px;
+    }
+
+    .big-draw-btn {
+      background: #f59e0b;
+      color: #78350f;
+      font-size: 1.25rem;
+      font-weight: 800;
+      padding: 14px 36px;
+      border-radius: 9999px;
+      border: 3px solid #fef3c7;
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .big-draw-btn:hover {
+      transform: scale(1.05);
+      background: #fbbf24;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
+    }
+
+    .big-draw-btn:active {
+      transform: scale(0.97);
+    }
+
+    /* Animation overlay */
+    .rolling-banner {
+      display: none;
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #fef08a;
+      margin-top: 12px;
+      animation: pulse 0.8s infinite alternate;
+    }
+
+    @keyframes pulse {
+      from { opacity: 0.6; transform: scale(0.98); }
+      to { opacity: 1; transform: scale(1.02); }
+    }
+
+    /* Results section */
+    .results-section {
+      display: none;
+    }
+
+    .results-header-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .results-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 16px;
+      margin-top: 16px;
+    }
+
+    .result-card {
+      background: #ffffff;
+      border: 1px solid var(--gray-200);
+      border-left: 5px solid var(--primary);
+      border-radius: 8px;
+      padding: 14px 16px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .result-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 6px;
+    }
+
+    .result-card-title {
+      font-weight: 700;
+      font-size: 1.05rem;
+      color: var(--gray-900);
+    }
+
+    .result-card-category {
+      font-size: 0.75rem;
+      color: var(--gray-500);
+      background: var(--gray-100);
+      padding: 2px 8px;
+      border-radius: 4px;
+    }
+
+    .result-card-desc {
+      font-size: 0.82rem;
+      color: var(--gray-500);
+      margin-bottom: 10px;
+    }
+
+    .assigned-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      min-height: 34px;
+    }
+
+    .person-tag {
+      background: var(--primary-light);
+      color: var(--primary);
+      border: 1px solid #bfdbfe;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-weight: 600;
+      font-size: 0.95rem;
+    }
+
+    .person-tag.empty-slot {
+      background: var(--gray-100);
+      color: var(--gray-400);
+      border: 1px dashed var(--gray-300);
+      font-weight: normal;
+    }
+
+    /* Unassigned candidates banner */
+    .unassigned-card {
+      background: #fdf2f8;
+      border: 1px solid #fbcfe8;
+      border-left: 5px solid #ec4899;
+      border-radius: 8px;
+      padding: 14px 16px;
+      margin-top: 16px;
+    }
+
+    .unassigned-card h4 {
+      color: #9d174d;
+      font-size: 0.95rem;
+      margin-bottom: 8px;
+    }
+
+    .unassigned-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .unassigned-tag {
+      background: #fce7f3;
+      color: #831843;
+      border: 1px solid #fbcfe8;
+      padding: 3px 9px;
+      border-radius: 6px;
+      font-size: 0.9rem;
+    }
+
+    /* Printable table style */
+    .print-sheet {
+      display: none;
+    }
+
+    @media print {
+      body {
+        background: white;
+        padding: 0;
+        color: black;
+      }
+      .no-print, header, .grid-layout, .lottery-hero {
+        display: none !important;
+      }
+      .print-sheet {
+        display: block !important;
+        max-width: 100%;
+        margin: 0;
+        padding: 20px;
+      }
+      .print-sheet h1 {
+        text-align: center;
+        font-size: 24pt;
+        margin-bottom: 6pt;
+      }
+      .print-sheet .print-meta {
+        text-align: center;
+        font-size: 11pt;
+        color: #555;
+        margin-bottom: 16pt;
+      }
+      .print-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 16pt;
+      }
+      .print-table th, .print-table td {
+        border: 1.5pt solid #333;
+        padding: 8pt 10pt;
+        font-size: 11pt;
+        text-align: left;
+      }
+      .print-table th {
+        background-color: #f0f0f0 !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+      .print-footer {
+        margin-top: 24pt;
+        display: flex;
+        justify-content: space-between;
+        font-size: 11pt;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<div class="container no-print">
+
+  <!-- Header -->
+  <header>
+    <div class="title-area">
+      <h1>🎯 班級工作與區域分配抽籤系統</h1>
+      <p>支援多樣工作範本、自訂新增/刪除項目、名額自訂、名單智慧解析與直接列印</p>
+    </div>
+    <div class="template-selector">
+      <span style="font-size: 0.88rem; font-weight:600; color:var(--gray-600);">📋 載入檔案範本：</span>
+      <button class="template-btn active" id="btnTplMeal" onclick="loadTemplate('meal')">🍱 餐桶分配表 (15人)</button>
+      <button class="template-btn" id="btnTplCleanAll" onclick="loadTemplate('clean_all')">🧹 115-1公共+班級打掃 (30人)</button>
+      <button class="template-btn" id="btnTplCleanPublic" onclick="loadTemplate('clean_public')">🏫 僅公共區域打掃 (15人)</button>
+      <button class="template-btn" id="btnTplCleanClass" onclick="loadTemplate('clean_class')">🏫 僅班上區域打掃 (15人)</button>
+      <button class="template-btn" id="btnTplClear" onclick="loadTemplate('empty')">➕ 全新自訂空白</button>
+    </div>
+  </header>
+
+  <!-- Main Work Area -->
+  <div class="grid-layout">
+
+    <!-- Left Column: Items and Quotas -->
+    <div>
+      <div class="card">
+        <div class="card-header">
+          <h2>
+            <span>📝 分配項目與人數設定</span>
+            <span class="badge badge-primary" id="itemsCountBadge">0 項</span>
+          </h2>
+          <div>
+            <button class="btn btn-outline" style="font-size:0.8rem; padding: 4px 10px;" onclick="resetQuotasToOne()">全部設為 1 人</button>
+          </div>
+        </div>
+
+        <div class="items-table-wrapper">
+          <table class="items-table">
+            <thead>
+              <tr>
+                <th style="width: 100px;">分組/分類</th>
+                <th>工作項目名稱</th>
+                <th style="width: 140px;">說明/備註</th>
+                <th style="width: 115px; text-align: center;">需求人數</th>
+                <th style="width: 45px; text-align: center;">操作</th>
+              </tr>
+            </thead>
+            <tbody id="itemsTableBody">
+              <!-- Dynamically populated -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Add Item Row -->
+        <div class="add-item-bar">
+          <input type="text" id="newCategory" class="input-text" placeholder="分組 (如: 抬餐桶 / 公共)">
+          <input type="text" id="newName" class="input-text" placeholder="項目名稱 (如: 湯桶 / 車庫) *">
+          <input type="text" id="newDesc" class="input-text" placeholder="說明 (如: 含洗滌槽)">
+          <div style="display:flex; gap: 6px; align-items:center;">
+            <input type="number" id="newQuota" class="input-text" value="1" min="1" max="99" style="width:55px; text-align:center;">
+            <button class="btn btn-primary" onclick="addNewItem()" style="padding: 6px 12px; white-space:nowrap;">➕ 新增</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Column: Candidate Names & Status -->
+    <div>
+      <div class="card">
+        <div class="card-header">
+          <h2>
+            <span>👥 抽籤名單輸入</span>
+            <span class="badge badge-success" id="candidatesCountBadge">0 人</span>
+          </h2>
+          <div style="font-size:0.85rem; color: var(--gray-500);">
+            每行一人或逗號/空格隔開
+          </div>
+        </div>
+
+        <textarea 
+          id="namesInput" 
+          class="names-textarea" 
+          placeholder="請在此貼上或輸入抽籤名單，例如：
+1號
+2號
+3號
+...
+或輸入姓名：
+王小明
+李小華
+張小美
+（也支援複製自 Excel、Word 或帶有座號的名單）"
+          oninput="updateCandidateCount()"
+        ></textarea>
+
+        <!-- Quick Generator buttons -->
+        <div class="names-quick-actions">
+          <span style="font-size: 0.8rem; color: var(--gray-500); align-self: center;">⚡ 快速填入座號：</span>
+          <button class="chip-btn" onclick="generateNumbers(15)">1 ~ 15 號</button>
+          <button class="chip-btn" onclick="generateNumbers(20)">1 ~ 20 號</button>
+          <button class="chip-btn" onclick="generateNumbers(30)">1 ~ 30 號</button>
+          <button class="chip-btn" onclick="generateNumbers(35)">1 ~ 35 號</button>
+          <button class="chip-btn" onclick="clearNames()">清空名單</button>
+          <button class="chip-btn" onclick="randomizeNamesInput()">預先打亂順序</button>
+        </div>
+
+        <!-- Real-time Comparison Statistics -->
+        <div class="stats-card">
+          <div>
+            <div class="stat-label">項目總需求</div>
+            <div class="stat-value" id="statTotalQuota" style="color:var(--primary);">0</div>
+          </div>
+          <div>
+            <div class="stat-label">名單總人數</div>
+            <div class="stat-value" id="statTotalCandidates" style="color:var(--success);">0</div>
+          </div>
+          <div>
+            <div class="stat-label">差額狀況</div>
+            <div class="stat-value" id="statDiff">0</div>
+          </div>
+        </div>
+
+        <div id="statusComparisonMessage" class="status-msg" style="background:var(--gray-100); color:var(--gray-700);">
+          請輸入抽籤名單或點選上方按鈕快速產生座號。
+        </div>
+
+        <div style="margin-top: 10px;">
+          <label style="font-size: 0.85rem; font-weight: 600; color: var(--gray-700);">
+            📅 下次抽籤日期（印出公告備註）：
+          </label>
+          <input type="text" id="nextDateInput" class="input-text" placeholder="例如：11月15日 或 下週一" style="margin-top: 4px;">
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Big Hero Lottery Trigger -->
+  <div class="lottery-hero">
+    <h3>🎲 萬事俱備，準備抽籤！</h3>
+    <p>嚴格均勻洗牌演算法，公平公開公正。可切換動畫效果增添班級抽籤趣味！</p>
+    
+    <div style="display:flex; justify-content:center; align-items:center; gap: 16px; flex-wrap:wrap;">
+      <label style="font-size:0.92rem; cursor:pointer; display:flex; align-items:center; gap:6px; background:rgba(255,255,255,0.15); padding:6px 12px; border-radius:6px;">
+        <input type="checkbox" id="chkAnimation" checked> 啟用刺激滾動動畫 (約1.5秒)
+      </label>
+      <button class="big-draw-btn" id="btnDraw" onclick="startLottery()">🎉 開始隨機抽籤</button>
+    </div>
+
+    <div class="rolling-banner" id="rollingBanner">
+      🌀 命運之輪瘋狂旋轉中... 誰會抽中呢？ 🥁
+    </div>
+  </div>
+
+  <!-- Results Section -->
+  <div class="card results-section" id="resultsSection">
+    <div class="card-header">
+      <h2>
+        <span>🏆 抽籤分配結果</span>
+        <span class="badge badge-success" id="resultTimestampBadge">剛剛</span>
+      </h2>
+      <div class="results-header-actions">
+        <button class="btn btn-outline" onclick="copyResultsAsText()">📋 複製結果清單</button>
+        <button class="btn btn-outline" onclick="exportToCsv()">📊 下載 CSV / Excel</button>
+        <button class="btn btn-primary" onclick="printResults()">🖨️ 列印 A4 公告表</button>
+      </div>
+    </div>
+
+    <div class="results-grid" id="resultsGrid">
+      <!-- Result Cards -->
+    </div>
+
+    <!-- Unassigned Candidates if any -->
+    <div class="unassigned-card" id="unassignedCard" style="display:none;">
+      <h4>🌟 未分配 / 候補 / 輪空名單（共 <span id="unassignedCount">0</span> 人）</h4>
+      <div class="unassigned-tags" id="unassignedList">
+        <!-- tags -->
+      </div>
+    </div>
+
+    <!-- Shortage Warning if any -->
+    <div id="shortageWarning" style="display:none; margin-top: 14px; padding: 10px 14px; background: #fff1f2; border: 1px solid #fecdd3; border-radius: 8px; color: #9f1239; font-size: 0.9rem;">
+      ⚠️ 提示：名單人數少於總名額，部分項目有留空待補位。
+    </div>
+  </div>
+
+</div>
+
+<!-- Printable Sheet for A4 Output -->
+<div class="print-sheet" id="printSheet">
+  <h1 id="printTitle">工作與區域分配表</h1>
+  <div class="print-meta" id="printMeta">抽籤日期：2026年10月30日</div>
+
+  <table class="print-table">
+    <thead>
+      <tr>
+        <th style="width: 15%;">分組/類別</th>
+        <th style="width: 25%;">工作項目</th>
+        <th style="width: 10%; text-align: center;">人數</th>
+        <th style="width: 50%;">抽中人員名單</th>
+      </tr>
+    </thead>
+    <tbody id="printTableBody">
+      <!-- Print Rows -->
+    </tbody>
+  </table>
+
+  <div id="printUnassignedArea" style="margin-top: 12pt; display:none;">
+    <strong>備取 / 未分配人員：</strong>
+    <span id="printUnassignedNames"></span>
+  </div>
+
+  <div class="print-footer">
+    <div>下次抽籤日期：<span id="printNextDate">_________ 月 _________ 日</span></div>
+    <div>導師/負責人簽章：___________________</div>
+  </div>
+</div>
+
+<script>
+  // Presets from the two docx files
+  const PRESETS = {
+    // 檔案1: 餐桶分配表.docx
+    meal: {
+      title: "抬餐桶工作分配表",
+      items: [
+        { category: "抬餐桶", name: "湯桶", desc: "", quota: 2 },
+        { category: "抬餐桶", name: "飯桶", desc: "", quota: 2 },
+        { category: "抬餐桶", name: "菜桶(主)", desc: "", quota: 2 },
+        { category: "抬餐桶", name: "菜桶(副)", desc: "", quota: 2 },
+        { category: "抬餐桶", name: "低年級支援", desc: "", quota: 4 },
+        { category: "抬餐桶", name: "湯匙", desc: "", quota: 1 },
+        { category: "抬餐桶", name: "水果", desc: "", quota: 1 },
+        { category: "抬餐桶", name: "預備班", desc: "", quota: 1 }
+      ]
+    },
+    // 檔案2: 115-1公共區域分配表.docx (公共 + 班上合計 30人)
+    clean_all: {
+      title: "115-1 打掃區域分配表 (公共+班級)",
+      items: [
+        { category: "公共打掃", name: "一樓廁所", desc: "", quota: 3 },
+        { category: "公共打掃", name: "車庫", desc: "含車庫、洗滌槽、車道、校門口", quota: 8 },
+        { category: "公共打掃", name: "東樓梯", desc: "一樓至四樓含教室走廊", quota: 3 },
+        { category: "公共打掃", name: "走廊", desc: "", quota: 1 },
+        { category: "班上打掃", name: "掃地、拖地", desc: "", quota: 4 },
+        { category: "班上打掃", name: "窗戶", desc: "", quota: 3 },
+        { category: "班上打掃", name: "桌櫃", desc: "", quota: 4 },
+        { category: "班上打掃", name: "黑板、餐桌", desc: "", quota: 1 },
+        { category: "班上打掃", name: "走廊", desc: "", quota: 3 }
+      ]
+    },
+    // 僅公共區域打掃 (15人)
+    clean_public: {
+      title: "公共打掃區域分配表",
+      items: [
+        { category: "公共打掃", name: "一樓廁所", desc: "", quota: 3 },
+        { category: "公共打掃", name: "車庫", desc: "含車庫、洗滌槽、車道、校門口", quota: 8 },
+        { category: "公共打掃", name: "東樓梯", desc: "一樓至四樓含教室走廊", quota: 3 },
+        { category: "公共打掃", name: "走廊", desc: "", quota: 1 }
+      ]
+    },
+    // 僅班上打掃區域 (15人)
+    clean_class: {
+      title: "班上打掃區域分配表",
+      items: [
+        { category: "班上打掃", name: "掃地、拖地", desc: "", quota: 4 },
+        { category: "班上打掃", name: "窗戶", desc: "", quota: 3 },
+        { category: "班上打掃", name: "桌櫃", desc: "", quota: 4 },
+        { category: "班上打掃", name: "黑板、餐桌", desc: "", quota: 1 },
+        { category: "班上打掃", name: "走廊", desc: "", quota: 3 }
+      ]
+    },
+    // 空白
+    empty: {
+      title: "自訂工作分配表",
+      items: []
+    }
+  };
+
+  // State
+  let currentItems = [];
+  let currentTitle = "抬餐桶工作分配表";
+  let lastDrawResult = null;
+
+  // Initialize
+  window.addEventListener("DOMContentLoaded", () => {
+    loadTemplate('meal');
+  });
+
+  // Load a preset template
+  function loadTemplate(key) {
+    const tpl = PRESETS[key];
+    if (!tpl) return;
+
+    currentTitle = tpl.title;
+    // Deep clone
+    currentItems = JSON.parse(JSON.stringify(tpl.items));
+
+    // Update buttons UI
+    document.querySelectorAll(".template-btn").forEach(btn => btn.classList.remove("active"));
+    const activeMap = {
+      meal: "btnTplMeal",
+      clean_all: "btnTplCleanAll",
+      clean_public: "btnTplCleanPublic",
+      clean_class: "btnTplCleanClass",
+      empty: "btnTplClear"
+    };
+    if (activeMap[key]) {
+      const activeEl = document.getElementById(activeMap[key]);
+      if (activeEl) activeEl.classList.add("active");
+    }
+
+    renderItemsTable();
+    updateCandidateCount();
+  }
+
+  // Render the items table
+  function renderItemsTable() {
+    const tbody = document.getElementById("itemsTableBody");
+    tbody.innerHTML = "";
+
+    currentItems.forEach((item, index) => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>
+          <input type="text" class="input-text" value="${escapeHtml(item.category || '')}" 
+            onchange="updateItemField(${index}, 'category', this.value)" placeholder="無分類">
+        </td>
+        <td>
+          <input type="text" class="input-text" style="font-weight:600;" value="${escapeHtml(item.name)}" 
+            onchange="updateItemField(${index}, 'name', this.value)">
+        </td>
+        <td>
+          <input type="text" class="input-text" value="${escapeHtml(item.desc || '')}" 
+            onchange="updateItemField(${index}, 'desc', this.value)" placeholder="備註...">
+        </td>
+        <td>
+          <div class="quota-control" style="justify-content:center;">
+            <button class="quota-btn" onclick="adjustQuota(${index}, -1)">-</button>
+            <input type="number" class="quota-input" min="1" max="99" value="${item.quota}" 
+              onchange="updateItemQuota(${index}, this.value)">
+            <button class="quota-btn" onclick="adjustQuota(${index}, 1)">+</button>
+          </div>
+        </td>
+        <td style="text-align: center;">
+          <button class="btn-icon-danger" title="移除此項目" onclick="removeItem(${index})">🗑️</button>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+
+    document.getElementById("itemsCountBadge").innerText = `${currentItems.length} 項`;
+    updateComparisonStats();
+  }
+
+  // Update a single item field
+  function updateItemField(index, field, value) {
+    if (currentItems[index]) {
+      currentItems[index][field] = value.trim();
+    }
+  }
+
+  // Adjust quota via +/- buttons
+  function adjustQuota(index, delta) {
+    if (currentItems[index]) {
+      let q = parseInt(currentItems[index].quota, 10) || 1;
+      q = Math.max(1, q + delta);
+      currentItems[index].quota = q;
+      renderItemsTable();
+    }
+  }
+
+  // Update item quota directly
+  function updateItemQuota(index, val) {
+    if (currentItems[index]) {
+      let q = parseInt(val, 10);
+      if (isNaN(q) || q < 1) q = 1;
+      currentItems[index].quota = q;
+      renderItemsTable();
+    }
+  }
+
+  // Reset all quotas to 1
+  function resetQuotasToOne() {
+    currentItems.forEach(item => item.quota = 1);
+    renderItemsTable();
+  }
+
+  // Remove an item
+  function removeItem(index) {
+    currentItems.splice(index, 1);
+    renderItemsTable();
+  }
+
+  // Add a new custom item
+  function addNewItem() {
+    const nameEl = document.getElementById("newName");
+    const catEl = document.getElementById("newCategory");
+    const descEl = document.getElementById("newDesc");
+    const quotaEl = document.getElementById("newQuota");
+
+    const name = nameEl.value.trim();
+    if (!name) {
+      alert("請輸入項目名稱！");
+      nameEl.focus();
+      return;
+    }
+
+    const quota = Math.max(1, parseInt(quotaEl.value, 10) || 1);
+    const category = catEl.value.trim();
+    const desc = descEl.value.trim();
+
+    currentItems.push({
+      category: category,
+      name: name,
+      desc: desc,
+      quota: quota
+    });
+
+    // Reset inputs
+    nameEl.value = "";
+    descEl.value = "";
+    quotaEl.value = "1";
+    nameEl.focus();
+
+    renderItemsTable();
+  }
+
+  // Parse candidate names from textarea
+  function getCandidateNames() {
+    const raw = document.getElementById("namesInput").value;
+    if (!raw.trim()) return [];
+
+    // Split by newlines, commas, semi-colons, tabs
+    const lines = raw.split(/[\r\n,;，；\t]+/);
+    const names = [];
+
+    for (let line of lines) {
+      line = line.trim();
+      if (!line) continue;
+      // Handle space separated if not formatted with spaces in names
+      // If line has multiple items separated by spaces, split them
+      const spaceSplit = line.split(/\s+/);
+      for (let s of spaceSplit) {
+        s = s.trim();
+        if (s) names.push(s);
+      }
+    }
+    return names;
+  }
+
+  // Update candidate count badge and comparison
+  function updateCandidateCount() {
+    const candidates = getCandidateNames();
+    document.getElementById("candidatesCountBadge").innerText = `${candidates.length} 人`;
+    updateComparisonStats();
+  }
+
+  // Calculate stats and display status
+  function updateComparisonStats() {
+    const candidates = getCandidateNames();
+    const candidateCount = candidates.length;
+    const totalQuota = currentItems.reduce((acc, item) => acc + (parseInt(item.quota, 10) || 0), 0);
+    const diff = candidateCount - totalQuota;
+
+    document.getElementById("statTotalQuota").innerText = totalQuota;
+    document.getElementById("statTotalCandidates").innerText = candidateCount;
+
+    const diffEl = document.getElementById("statDiff");
+    const msgEl = document.getElementById("statusComparisonMessage");
+
+    if (candidateCount === 0 && totalQuota === 0) {
+      diffEl.innerText = "0";
+      diffEl.style.color = "var(--gray-700)";
+      msgEl.className = "status-msg";
+      msgEl.style.background = "var(--gray-100)";
+      msgEl.style.color = "var(--gray-700)";
+      msgEl.innerHTML = "💡 請輸入抽籤名單或點選上方按鈕快速產生座號。";
+    } else if (diff === 0) {
+      diffEl.innerText = "剛好吻合 ✨";
+      diffEl.style.color = "var(--success)";
+      msgEl.className = "status-msg";
+      msgEl.style.background = "var(--success-light)";
+      msgEl.style.color = "var(--success)";
+      msgEl.innerHTML = `✅ 完美吻合！名單人數 (${candidateCount} 人) 剛好等於項目總名額 (${totalQuota} 人)。`;
+    } else if (diff > 0) {
+      diffEl.innerText = `多 ${diff} 人`;
+      diffEl.style.color = "var(--warning)";
+      msgEl.className = "status-msg";
+      msgEl.style.background = "var(--warning-light)";
+      msgEl.style.color = "var(--warning)";
+      msgEl.innerHTML = `⚠️ 名單人數 (${candidateCount} 人) 多於項目名額 (${totalQuota} 人)，抽籤後將有 <strong>${diff}</strong> 人列入「未分配/候補/輪空名單」。`;
+    } else {
+      diffEl.innerText = `少 ${Math.abs(diff)} 人`;
+      diffEl.style.color = "var(--danger)";
+      msgEl.className = "status-msg";
+      msgEl.style.background = "var(--danger-light)";
+      msgEl.style.color = "var(--danger)";
+      msgEl.innerHTML = `ℹ️ 名單人數 (${candidateCount} 人) 小於項目名額 (${totalQuota} 人)，尚缺 <strong>${Math.abs(diff)}</strong> 人，抽完後部分名額將留空。`;
+    }
+  }
+
+  // Quick action: generate 1~N numbers
+  function generateNumbers(n) {
+    const list = [];
+    for (let i = 1; i <= n; i++) {
+      list.push(`${i}號`);
+    }
+    document.getElementById("namesInput").value = list.join("\n");
+    updateCandidateCount();
+  }
+
+  // Clear candidate names
+  function clearNames() {
+    if (confirm("確定要清空抽籤名單嗎？")) {
+      document.getElementById("namesInput").value = "";
+      updateCandidateCount();
+    }
+  }
+
+  // Randomize names input textarea
+  function randomizeNamesInput() {
+    const names = getCandidateNames();
+    if (names.length === 0) return;
+    shuffleArray(names);
+    document.getElementById("namesInput").value = names.join("\n");
+    updateCandidateCount();
+  }
+
+  // Fisher-Yates shuffle
+  function shuffleArray(arr) {
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  }
+
+  // Start lottery drawing
+  function startLottery() {
+    if (currentItems.length === 0) {
+      alert("請先新增或載入至少一個工作項目！");
+      return;
+    }
+
+    const candidates = getCandidateNames();
+    if (candidates.length === 0) {
+      alert("請先輸入抽籤名單，或點擊快速產生座號！");
+      document.getElementById("namesInput").focus();
+      return;
+    }
+
+    const useAnimation = document.getElementById("chkAnimation").checked;
+    const btnDraw = document.getElementById("btnDraw");
+    const banner = document.getElementById("rollingBanner");
+
+    if (useAnimation) {
+      btnDraw.disabled = true;
+      banner.style.display = "block";
+
+      let rollTimes = 0;
+      const interval = setInterval(() => {
+        rollTimes++;
+        banner.innerText = `🎲 抽取中... [${candidates[Math.floor(Math.random() * candidates.length)]}]`;
+        if (rollTimes >= 12) {
+          clearInterval(interval);
+          banner.style.display = "none";
+          btnDraw.disabled = false;
+          executeDraw(candidates);
+        }
+      }, 100);
+    } else {
+      executeDraw(candidates);
+    }
+  }
+
+  // Execute drawing logic
+  function executeDraw(candidates) {
+    // Clone candidates and shuffle
+    const shuffled = shuffleArray([...candidates]);
+
+    let pointer = 0;
+    const results = [];
+
+    currentItems.forEach(item => {
+      const assigned = [];
+      const quota = parseInt(item.quota, 10) || 1;
+      for (let i = 0; i < quota; i++) {
+        if (pointer < shuffled.length) {
+          assigned.push(shuffled[pointer]);
+          pointer++;
+        } else {
+          assigned.push(null); // Unfilled
+        }
+      }
+      results.push({
+        category: item.category,
+        name: item.name,
+        desc: item.desc,
+        quota: quota,
+        assigned: assigned
+      });
+    });
+
+    const unassigned = shuffled.slice(pointer);
+
+    lastDrawResult = {
+      timestamp: new Date(),
+      results: results,
+      unassigned: unassigned,
+      title: currentTitle,
+      nextDate: document.getElementById("nextDateInput").value.trim()
+    };
+
+    renderResultsUI(lastDrawResult);
+
+    // Smooth scroll to results
+    const resultsSection = document.getElementById("resultsSection");
+    resultsSection.style.display = "block";
+    resultsSection.scrollIntoView({ behavior: "smooth" });
+  }
+
+  // Render results UI
+  function renderResultsUI(data) {
+    const grid = document.getElementById("resultsGrid");
+    grid.innerHTML = "";
+
+    const timeStr = data.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    document.getElementById("resultTimestampBadge").innerText = `抽籤時間：${timeStr}`;
+
+    let hasEmptySlot = false;
+
+    data.results.forEach(res => {
+      const card = document.createElement("div");
+      card.className = "result-card";
+
+      const tagsHtml = res.assigned.map(p => {
+        if (p) {
+          return `<span class="person-tag">${escapeHtml(p)}</span>`;
+        } else {
+          hasEmptySlot = true;
+          return `<span class="person-tag empty-slot">（缺額）</span>`;
+        }
+      }).join("");
+
+      card.innerHTML = `
+        <div>
+          <div class="result-card-header">
+            <span class="result-card-title">${escapeHtml(res.name)} (${res.quota}人)</span>
+            ${res.category ? `<span class="result-card-category">${escapeHtml(res.category)}</span>` : ''}
+          </div>
+          ${res.desc ? `<div class="result-card-desc">${escapeHtml(res.desc)}</div>` : ''}
+        </div>
+        <div class="assigned-tags">
+          ${tagsHtml}
+        </div>
+      `;
+      grid.appendChild(card);
+    });
+
+    // Unassigned section
+    const unassignedCard = document.getElementById("unassignedCard");
+    const unassignedList = document.getElementById("unassignedList");
+    if (data.unassigned && data.unassigned.length > 0) {
+      unassignedCard.style.display = "block";
+      document.getElementById("unassignedCount").innerText = data.unassigned.length;
+      unassignedList.innerHTML = data.unassigned.map(name => 
+        `<span class="unassigned-tag">${escapeHtml(name)}</span>`
+      ).join("");
+    } else {
+      unassignedCard.style.display = "none";
+    }
+
+    // Shortage warning
+    document.getElementById("shortageWarning").style.display = hasEmptySlot ? "block" : "none";
+  }
+
+  // Copy results as plain text
+  function copyResultsAsText() {
+    if (!lastDrawResult) return;
+    let text = `【${lastDrawResult.title} - 抽籤分配結果】\n`;
+    text += `抽籤時間：${lastDrawResult.timestamp.toLocaleString()}\n`;
+    if (lastDrawResult.nextDate) {
+      text += `下次抽籤日期：${lastDrawResult.nextDate}\n`;
+    }
+    text += `------------------------------------\n`;
+
+    lastDrawResult.results.forEach(r => {
+      const categoryPrefix = r.category ? `[${r.category}] ` : '';
+      const descSuffix = r.desc ? ` (${r.desc})` : '';
+      const names = r.assigned.map(p => p || '(缺額)').join(', ');
+      text += `${categoryPrefix}${r.name}${descSuffix} (${r.quota}人)：${names}\n`;
+    });
+
+    if (lastDrawResult.unassigned.length > 0) {
+      text += `------------------------------------\n`;
+      text += `【未分配/候補人員 (${lastDrawResult.unassigned.length}人)】：${lastDrawResult.unassigned.join(', ')}\n`;
+    }
+
+    navigator.clipboard.writeText(text).then(() => {
+      alert("✅ 已將抽籤結果複製到剪貼簿！可直接貼在 LINE、Word 或信件中。");
+    }).catch(err => {
+      prompt("請手動按 Ctrl+C 複製結果：", text);
+    });
+  }
+
+  // Export to CSV
+  function exportToCsv() {
+    if (!lastDrawResult) return;
+    let csv = "\uFEFF"; // UTF-8 BOM
+    csv += "分組,項目名稱,備註,需求人數,分配名單\n";
+
+    lastDrawResult.results.forEach(r => {
+      const names = r.assigned.map(p => p || '缺額').join('、');
+      csv += `"${r.category || ''}","${r.name}","${r.desc || ''}",${r.quota},"${names}"\n`;
+    });
+
+    if (lastDrawResult.unassigned.length > 0) {
+      csv += `"候補/未分配","無","輪空",${lastDrawResult.unassigned.length},"${lastDrawResult.unassigned.join('、')}"\n`;
+    }
+
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = `抽籤分配表_${new Date().toISOString().slice(0,10)}.csv`;
+    link.click();
+  }
+
+  // Print preparation
+  function printResults() {
+    if (!lastDrawResult) {
+      alert("請先完成抽籤再進行列印！");
+      return;
+    }
+
+    document.getElementById("printTitle").innerText = lastDrawResult.title;
+    document.getElementById("printMeta").innerText = `抽籤日期：${lastDrawResult.timestamp.toLocaleDateString()} ${lastDrawResult.timestamp.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}`;
+
+    const nextDate = document.getElementById("nextDateInput").value.trim();
+    if (nextDate) {
+      document.getElementById("printNextDate").innerText = nextDate;
+    } else {
+      document.getElementById("printNextDate").innerText = "_________ 月 _________ 日";
+    }
+
+    const printTbody = document.getElementById("printTableBody");
+    printTbody.innerHTML = "";
+
+    lastDrawResult.results.forEach(r => {
+      const tr = document.createElement("tr");
+      const names = r.assigned.map(p => p || '<span style="color:#aaa;">(缺額)</span>').join('、');
+      const descHtml = r.desc ? `<br><small style="color:#666;">(${escapeHtml(r.desc)})</small>` : '';
+      tr.innerHTML = `
+        <td>${escapeHtml(r.category || '-')}</td>
+        <td><strong>${escapeHtml(r.name)}</strong>${descHtml}</td>
+        <td style="text-align:center;">${r.quota}</td>
+        <td style="font-size:12pt; font-weight:600;">${names}</td>
+      `;
+      printTbody.appendChild(tr);
+    });
+
+    const unassignedArea = document.getElementById("printUnassignedArea");
+    if (lastDrawResult.unassigned.length > 0) {
+      unassignedArea.style.display = "block";
+      document.getElementById("printUnassignedNames").innerText = lastDrawResult.unassigned.join('、');
+    } else {
+      unassignedArea.style.display = "none";
+    }
+
+    window.print();
+  }
+
+  function escapeHtml(str) {
+    if (!str) return "";
+    return String(str)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  }
+</script>
+</body>
+</html>
