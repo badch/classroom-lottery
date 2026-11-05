@@ -658,7 +658,6 @@
     <div class="template-selector">
       <span style="font-size: 0.88rem; font-weight:600; color:var(--gray-600);">📋 載入檔案範本：</span>
       <button class="template-btn active" id="btnTplMeal" onclick="loadTemplate('meal')">🍱 餐桶分配表 (15人)</button>
-      <button class="template-btn" id="btnTplCleanAll" onclick="loadTemplate('clean_all')">🧹 115-1公共+班級打掃 (30人)</button>
       <button class="template-btn" id="btnTplCleanPublic" onclick="loadTemplate('clean_public')">🏫 僅公共區域打掃 (15人)</button>
       <button class="template-btn" id="btnTplCleanClass" onclick="loadTemplate('clean_class')">🏫 僅班上區域打掃 (15人)</button>
       <button class="template-btn" id="btnTplClear" onclick="loadTemplate('empty')">➕ 全新自訂空白</button>
@@ -881,21 +880,6 @@
         { category: "抬餐桶", name: "預備班", desc: "", quota: 1 }
       ]
     },
-    // 檔案2: 115-1公共區域分配表.docx (公共 + 班上合計 30人)
-    clean_all: {
-      title: "115-1 打掃區域分配表 (公共+班級)",
-      items: [
-        { category: "公共打掃", name: "一樓廁所", desc: "", quota: 3 },
-        { category: "公共打掃", name: "車庫", desc: "含車庫、洗滌槽、車道、校門口", quota: 8 },
-        { category: "公共打掃", name: "東樓梯", desc: "一樓至四樓含教室走廊", quota: 3 },
-        { category: "公共打掃", name: "走廊", desc: "", quota: 1 },
-        { category: "班上打掃", name: "掃地、拖地", desc: "", quota: 4 },
-        { category: "班上打掃", name: "窗戶", desc: "", quota: 3 },
-        { category: "班上打掃", name: "桌櫃", desc: "", quota: 4 },
-        { category: "班上打掃", name: "黑板、餐桌", desc: "", quota: 1 },
-        { category: "班上打掃", name: "走廊", desc: "", quota: 3 }
-      ]
-    },
     // 僅公共區域打掃 (15人)
     clean_public: {
       title: "公共打掃區域分配表",
@@ -947,7 +931,6 @@
     document.querySelectorAll(".template-btn").forEach(btn => btn.classList.remove("active"));
     const activeMap = {
       meal: "btnTplMeal",
-      clean_all: "btnTplCleanAll",
       clean_public: "btnTplCleanPublic",
       clean_class: "btnTplCleanClass",
       empty: "btnTplClear"
